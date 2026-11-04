@@ -264,6 +264,14 @@
     }
   }
 
+  function refreshChip() {
+    if (!chipEl) return;
+    var c = activeCert();
+    chipEl.textContent = c ? c.code : 'ISTQB';
+    if (c && c.bank && c.bank.sets && c.bank.sets.length) chipEl.classList.add('on');
+    else chipEl.classList.remove('on');
+  }
+
   function stopTimer() {
     if (tickId) { window.clearInterval(tickId); tickId = null; }
   }
@@ -1320,7 +1328,7 @@
     return work.then(function (node) {
       clear(viewEl);
       viewEl.appendChild(node || h('div', { class: 'wrap' }));
-      certChip();
+      refreshChip();
       if (p[0] === 'exam' && p[1] === 'run') startExamTimer();
       window.scrollTo(0, 0);
     }).catch(function (err) {

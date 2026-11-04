@@ -1,0 +1,258 @@
+{
+  "schema": 1,
+  "updated": "2026-01-01",
+  "source": "https://istqb.org/certifications/",
+  "examRules": "https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/",
+  "fees": {
+    "note": "ISTQB does not set or publish exam prices. Fees, dates and booking are handled by your local Member Board or an accredited exam provider, so the amount depends on the country, the provider and the delivery format (online proctored, classroom or on-site).",
+    "groups": {
+      "Foundation": "typically USD 150 - 280",
+      "Advanced": "typically USD 250 - 450",
+      "Specialist": "typically USD 250 - 500",
+      "Expert": "set per module by the provider, usually the highest in the scheme"
+    },
+    "retake": "You may retake an exam as often as needed. Retake fees and any waiting period between attempts are set by the Member Board or exam provider."
+  },
+  "copyright": "Sample exam questions, answers and justifications are (c) International Software Testing Qualifications Board (ISTQB). They are reproduced here for non-commercial study with the source acknowledged. This study tool is not affiliated with, endorsed by, or accredited by ISTQB or any Member Board.",
+  "levels": [
+    {
+      "id": "ctfl",
+      "code": "CTFL v4.0",
+      "name": "Certified Tester Foundation Level",
+      "group": "Foundation",
+      "short": "The cornerstone of the ISTQB Certified Tester scheme: the vocabulary, principles, techniques and management basics of software testing, relevant to Waterfall, Agile, DevOps and continuous delivery.",
+      "audience": "Anyone who needs practical knowledge of the fundamental concepts of software testing: testers, test analysts, test engineers, test consultants, test managers, user acceptance testers and software developers, as well as project managers, quality managers, development managers, business analysts, IT directors and management consultants who need a basic understanding of testing.",
+      "prerequisites": "None. CTFL is itself the prerequisite for every other ISTQB Certified Tester certification that requires Foundation Level.",
+      "exam": { "questions": 40, "points": 40, "passMark": 26, "minutes": 60, "extraTime": "An extra 25% of the exam time is available when the exam language is not your first language." },
+      "syllabusUrl": "https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/",
+      "bank": { "sets": ["a", "b", "c", "d"], "total": 186 }
+    },
+    {
+      "id": "ctal-ta",
+      "code": "CTAL-TA v4.0",
+      "name": "Advanced Level Test Analyst",
+      "group": "Advanced",
+      "short": "Structured, thorough testing across the whole development lifecycle, with the test analyst's role in the test process and the deeper analysis and design techniques.",
+      "audience": "Experienced testers who analyse, design and evaluate tests in detail, including the risk-based selection of techniques and the production of high-quality test documentation.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ctal-tta",
+      "code": "CTAL-TTA",
+      "name": "Advanced Level Technical Test Analyst",
+      "group": "Advanced",
+      "short": "Technical testing skills: risk-based testing, white-box techniques, static and dynamic analysis, non-functional testing and test automation.",
+      "audience": "Testers and engineers who work close to the code and the architecture and who own technical test analysis and automation.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ctal-tm",
+      "code": "CTAL-TM v3.0",
+      "name": "Advanced Level Test Management",
+      "group": "Advanced",
+      "short": "Managing testing across the lifecycle: test strategy and approach, the test team and its competencies, risk, monitoring, control and stakeholder communication.",
+      "audience": "Test managers, test leads and anyone who takes responsibility for planning, monitoring and controlling testing on a project or programme.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ctal-tae",
+      "code": "CTAL-TAE v2.0",
+      "name": "Advanced Level Test Automation Engineering",
+      "group": "Advanced",
+      "short": "Designing, building and maintaining test automation solutions, and their relationship with test management, configuration, defect management and CI.",
+      "audience": "Test automation engineers, technical testers and developers who introduce or improve automation in an organisation.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ctal-at",
+      "code": "CTAL-AT v2.0",
+      "name": "Advanced Level Agile Tester",
+      "group": "Advanced",
+      "short": "Agile test strategy, whole-team collaboration, shift-left practices and contemporary agile testing techniques for experienced testers.",
+      "audience": "Experienced testers working in agile teams, and agile coaches, product owners and developers who want deeper testing expertise.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL) and knowledge of the agile testing foundations."
+    },
+    {
+      "id": "ctfl-at",
+      "code": "CTFL-AT",
+      "name": "Foundation Level Agile Tester (retiring)",
+      "group": "Specialist",
+      "short": "The agile testing foundations: agile principles, the whole-team approach, agile test techniques and tools. ISTQB points candidates to CTFL v4.0 and CTAL-AT v2.0 for current coverage.",
+      "audience": "Testers moving into agile teams, and developers, product owners and scrum masters who test.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL).",
+      "retiring": true
+    },
+    {
+      "id": "ctal-att",
+      "code": "CTAL-ATT",
+      "name": "Advanced Level Agile Technical Tester (retiring)",
+      "group": "Specialist",
+      "short": "Technical agile testing: agile techniques, test automation approaches and continuous deployment and delivery.",
+      "audience": "Technical testers and developers in agile organisations responsible for automation and continuous delivery.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL) and CTFL-AT for the agile stream.",
+      "retiring": true
+    },
+    {
+      "id": "ct-ai",
+      "code": "CT-AI v2.0",
+      "name": "AI Testing",
+      "group": "Specialist",
+      "short": "Testing AI-based systems, including machine learning systems and generative AI, and using AI and LLMs in testing.",
+      "audience": "Testers, QA engineers and data specialists who test, or test with, artificial intelligence systems.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-genai",
+      "code": "CT-GenAI",
+      "name": "Testing with Generative AI",
+      "group": "Specialist",
+      "short": "How, when and why to use large language models and other generative AI across the test process, from requirements to automation, reporting and improvement.",
+      "audience": "Testing and quality engineering professionals who want a structured, hands-on path into generative AI.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-tas",
+      "code": "CT-TAS",
+      "name": "Test Automation Strategy",
+      "group": "Specialist",
+      "short": "Planning test automation for an organisation: value, selection, architecture, skills, governance and measuring success.",
+      "audience": "Anyone involved in software testing and test automation who shapes automation strategy rather than only building tests.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-atlas",
+      "code": "CT-ATLaS",
+      "name": "Agile Test Leadership at Scale",
+      "group": "Specialist",
+      "short": "Organising and improving quality and testing across many agile teams, shifting from test management towards quality assistance and a quality culture.",
+      "audience": "Quality leaders, test managers, agile coaches and heads of engineering in multi-team agile organisations.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL); an Advanced level certification is recommended."
+    },
+    {
+      "id": "ct-act",
+      "code": "CT-AcT",
+      "name": "Acceptance Testing",
+      "group": "Specialist",
+      "short": "Collaboration between product owners, business analysts and testers in acceptance testing, including user acceptance, contractual and regulatory testing, alpha and beta testing.",
+      "audience": "Product owners, business analysts, business testers and testers who run acceptance testing.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-pt",
+      "code": "CT-PT",
+      "name": "Performance Testing",
+      "group": "Specialist",
+      "short": "Performance testing concepts, measurements, activities, tools and the organisational aspects of running performance tests.",
+      "audience": "Testers and engineers who plan, execute and interpret performance tests.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-sec",
+      "code": "CT-SEC",
+      "name": "Security Tester",
+      "group": "Specialist",
+      "short": "Planning, performing and evaluating security tests from risk, requirements, vulnerability and human factor perspectives, with tools and standards.",
+      "audience": "Security testers and testers responsible for security aspects of a product.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-ste",
+      "code": "CT-STE",
+      "name": "Security Test Engineer",
+      "group": "Specialist",
+      "short": "Security testing engineering: asset protection, audits, adapting security testing to modern architectures and tooling.",
+      "audience": "Security test engineers and technical testers building security testing into delivery.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-ut",
+      "code": "CT-UT",
+      "name": "Usability Testing",
+      "group": "Specialist",
+      "short": "Usability, user experience and accessibility testing methods, procedures, standards and risks.",
+      "audience": "Testers and designers responsible for usability and accessibility evaluation.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-ft",
+      "code": "CT-FT",
+      "name": "Finance Testing",
+      "group": "Specialist",
+      "short": "The testing knowledge and skills needed for software systems in the financial services domain, from transactions and interest calculations to regulation.",
+      "audience": "Testers and quality professionals working in banking, insurance and other financial systems.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-aut",
+      "code": "CT-AuT",
+      "name": "Automotive Software Tester",
+      "group": "Specialist",
+      "short": "Testing electrical and electronic systems in vehicles against standards such as Automotive SPICE, ISO 26262 and AUTOSAR, including testing in virtual environments.",
+      "audience": "Testers in the automotive industry who test E/E systems and the software around them.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-game",
+      "code": "CT-GaMe",
+      "name": "Game Testing",
+      "group": "Specialist",
+      "short": "Testing games: mechanics, sound, graphics, localisation, multiplayer and the risks and goals specific to game projects.",
+      "audience": "Testers, developers and producers in game studios.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-gt",
+      "code": "CT-GT",
+      "name": "Gambling Industry Tester",
+      "group": "Specialist",
+      "short": "Gambling industry concepts, the industry ecosystem and its test types: compliance, fun factor, math, audio, multiplayer and interoperability testing.",
+      "audience": "Testers working for betting, casino and gaming platform providers.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-mat",
+      "code": "CT-MAT",
+      "name": "Mobile Application Testing",
+      "group": "Specialist",
+      "short": "Testing mobile applications: project activities, roles, methods and tools, including device and network diversity.",
+      "audience": "Testers of mobile apps and mobile platform teams.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-mbt",
+      "code": "CT-MBT",
+      "name": "Model-Based Tester",
+      "group": "Specialist",
+      "short": "Using models as the basis for test design, extending classic techniques such as equivalence partitioning, boundary values, decision tables and state transitions.",
+      "audience": "Testers and automation engineers who want model-based test generation.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL)."
+    },
+    {
+      "id": "ct-qdo",
+      "code": "CT-QDO",
+      "name": "Quality in DevOps",
+      "group": "Specialist",
+      "short": "Applying quality and test activities in DevOps-based delivery so solutions reach the right quality level continuously.",
+      "audience": "Testers, engineers and operations staff working in DevOps-based delivery.",
+      "prerequisites": "ISTQB Certified Tester Foundation Level (CTFL) v4.0 or a previous version."
+    },
+    {
+      "id": "ctel-tm",
+      "code": "CTEL-TM",
+      "name": "Expert Level Test Management",
+      "group": "Expert",
+      "short": "Three modules - Strategic Test Management, Operational Test Management and Managing the Test Team - that together certify the management of testing, testers and test stakeholders. Expert certificates expire after 7 years.",
+      "audience": "Senior test managers and heads of testing who lead testing across a programme or the organisation.",
+      "prerequisites": "Advanced level certification (typically CTAL-TM) plus the experience described in the module syllabi."
+    },
+    {
+      "id": "ctel-itp",
+      "code": "CTEL-ITP",
+      "name": "Expert Level Improving the Test Process",
+      "group": "Expert",
+      "short": "Two modules - Assessing Test Processes and Implementing Test Process Improvement - for experts who diagnose and change test processes. Expert certificates expire after 7 years.",
+      "audience": "Test process consultants and quality leaders responsible for process assessment and improvement.",
+      "prerequisites": "Advanced level certification plus the experience described in the module syllabi."
+    }
+  ]
+}

@@ -252,8 +252,22 @@
   }
 
   function go(path) {
-    if (route() === path) render();
-    else window.location.hash = path;
+    var next = path.charAt(0) === '#' ? path : '#' + path;
+    if ('#' + route() === next) { render(); return; }
+    window.location.hash = next;
+  }
+
+  function goBackTo(title, text, hash, label) {
+    return h('div', { class: 'wrap' }, [
+      h('div', { class: 'card' }, [
+        h('h2', { class: 'h2', text: title }),
+        h('p', { class: 'small muted', text: text }),
+        h('button', {
+          class: 'btn small primary', attrs: { type: 'button' }, text: label,
+          on: { click: function () { go(hash); } }
+        })
+      ])
+    ]);
   }
 
   function navActive(name) {
@@ -602,8 +616,7 @@
   function viewPracticeRun() {
     navActive('practice');
     if (!session || session.kind !== 'practice' || !session.refs.length) {
-      window.location.hash = '#/practice';
-      return h('div', { class: 'wrap' });
+      return goBackTo('No practice session yet', 'Pick a question set to start practising.', '#/practice', 'Choose a set');
     }
     var total = session.refs.length;
     var i = Math.max(0, Math.min(session.index, total - 1));
@@ -755,8 +768,7 @@
   function viewPracticeDone() {
     navActive('practice');
     if (!session || session.kind !== 'practice') {
-      window.location.hash = '#/practice';
-      return h('div', { class: 'wrap' });
+      return goBackTo('No session to summarise', 'Start a practice session to see a summary here.', '#/practice', 'Practise');
     }
     document.title = 'Session summary - CertStudy';
     var wrap = h('div', { class: 'wrap' }, [
@@ -886,8 +898,7 @@
   function viewExamRun() {
     navActive('exams');
     if (!session || session.kind !== 'exam' || session.submitted) {
-      window.location.hash = '#/exam';
-      return h('div', { class: 'wrap' });
+      return goBackTo('No exam in progress', 'Choose a 40-question paper to start a timed mock exam.', '#/exam', 'Choose a paper');
     }
     var total = session.refs.length;
     var i = Math.max(0, Math.min(session.index, total - 1));
@@ -1030,9 +1041,8 @@
 
   function viewExamResult() {
     navActive('exams');
-    if (!session || !session.score && session.score !== 0) {
-      window.location.hash = '#/exam';
-      return h('div', { class: 'wrap' });
+    if (!session || (typeof session.score !== 'number')) {
+      return goBackTo('No result to show', 'Finish a mock exam to see your score and chapter breakdown.', '#/exam', 'Take a mock exam');
     }
     var passed = session.score >= passMark();
     document.title = 'Exam result - CertStudy';

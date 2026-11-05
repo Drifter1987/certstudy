@@ -486,6 +486,11 @@
     if (state.active) wrap.appendChild(resumeBanner());
     wrap.appendChild(heroCard());
     wrap.appendChild(statsGrid());
+    wrap.appendChild(h('div', { class: 'row tight' }, [
+      h('a', { class: 'btn small ghost', href: '#/stats', text: 'Full statistics' }),
+      h('a', { class: 'btn small ghost', href: '#/review', text: 'Review bookmarks' }),
+      h('a', { class: 'btn small ghost', href: '#/certs', text: 'All certifications' })
+    ]));
     wrap.appendChild(h('section', { class: 'card' }, [
       h('div', { class: 'row' }, [
         h('h2', { class: 'h2', text: 'Choose your certification' }),

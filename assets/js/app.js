@@ -577,6 +577,18 @@
     ]));
 
     wrap.appendChild(h('section', { class: 'card' }, [
+      h('h2', { class: 'h2', text: 'Source documents' }),
+      h('p', { class: 'small muted', text: 'The official ISTQB PDFs, converted page by page and readable inside the app with scroll. Opening a question reference jumps straight to it.' }),
+      h('div', { class: 'grid grid-2' }, [
+        docRow('a-questions'), docRow('a-answers'),
+        docRow('b-questions'), docRow('b-answers'),
+        docRow('c-questions'), docRow('c-answers'),
+        docRow('d-questions'), docRow('d-answers'),
+        docRow('syllabus')
+      ].filter(Boolean))
+    ]));
+
+    wrap.appendChild(h('section', { class: 'card' }, [
       h('h2', { class: 'h2', text: 'Where the questions come from' }),
       h('p', { class: 'small muted', text: 'All four CTFL v4.0 sample exams published on istqb.org (sets A to D) are in this database: the 40 exam-shaped questions of each set and the additional questions ISTQB publishes with them.' })
     ]));
@@ -702,36 +714,305 @@
     return list;
   }
 
-  function syllabusPdfUrl() {
-    var c = certById('ctfl');
-    return c && c.syllabusPdf ? c.syllabusPdf : '';
+  /* ---------------------------------------------------- source documents */
+
+  var DOCS = {
+    'a-questions': { kind: 'questions', sid: 'a', title: 'CTFL sample exam A - Questions', file: 'docs/ctfl/set-a-questions.pdf', note: 'ISTQB CTFL v4.0 sample exam set A, questions v1.7, shown from the official PDF.' },
+    'a-answers': { kind: 'answers', sid: 'a', title: 'CTFL sample exam A - Answers', file: 'docs/ctfl/set-a-answers.pdf', note: 'ISTQB CTFL v4.0 sample exam set A, answers and justifications v1.7, shown from the official PDF.' },
+    'b-questions': { kind: 'questions', sid: 'b', title: 'CTFL sample exam B - Questions', file: 'docs/ctfl/set-b-questions.pdf', note: 'ISTQB CTFL v4.0 sample exam set B, questions v1.7, shown from the official PDF.' },
+    'b-answers': { kind: 'answers', sid: 'b', title: 'CTFL sample exam B - Answers', file: 'docs/ctfl/set-b-answers.pdf', note: 'ISTQB CTFL v4.0 sample exam set B, answers and justifications v1.7, shown from the official PDF.' },
+    'c-questions': { kind: 'questions', sid: 'c', title: 'CTFL sample exam C - Questions', file: 'docs/ctfl/set-c-questions.pdf', note: 'ISTQB CTFL v4.0 sample exam set C, questions v1.6, shown from the official PDF.' },
+    'c-answers': { kind: 'answers', sid: 'c', title: 'CTFL sample exam C - Answers', file: 'docs/ctfl/set-c-answers.pdf', note: 'ISTQB CTFL v4.0 sample exam set C, answers and justifications v1.6, shown from the official PDF.' },
+    'd-questions': { kind: 'questions', sid: 'd', title: 'CTFL sample exam D - Questions', file: 'docs/ctfl/set-d-questions.pdf', note: 'ISTQB CTFL v4.0 sample exam set D, questions v1.5, shown from the official PDF.' },
+    'd-answers': { kind: 'answers', sid: 'd', title: 'CTFL sample exam D - Answers', file: 'docs/ctfl/set-d-answers.pdf', note: 'ISTQB CTFL v4.0 sample exam set D, answers and justifications v1.5, shown from the official PDF.' },
+    'syllabus': { kind: 'syllabus', sid: 'ctfl', title: 'CTFL syllabus v4.0.1', file: 'docs/ctfl/syllabus-v4.0.1.pdf', note: 'The ISTQB Certified Tester Foundation Level syllabus, version 4.0.1, shown from the official PDF.' }
+  };
+
+  var pdfLibPromise = null;
+  var docToken = 0;
+  var docObserver = null;
+
+  function docsCleanup() {
+    docToken += 1;
+    if (docObserver) {
+      try { docObserver.disconnect(); } catch (e) { /* ignore */ }
+      docObserver = null;
+    }
+  }
+
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (pdfLibPromise) return pdfLibPromise;
+    pdfLibPromise = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'assets/vendor/pdfjs/pdf.min.js';
+      script.onload = function () {
+        if (!window.pdfjsLib) { reject(new Error('The PDF viewer did not start')); return; }
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/vendor/pdfjs/pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      };
+      script.onerror = function () { reject(new Error('The PDF viewer could not be loaded')); };
+      document.head.appendChild(script);
+    });
+    return pdfLibPromise;
+  }
+
+  function escapeRe(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function looksLikeIndexPage(text) {
+    return /\.{8,}/.test(text) || /table of contents/i.test(text);
+  }
+
+  function findPage(pdf, matcher, token, needle) {
+    var index = 1;
+    function step() {
+      if (token !== docToken) return Promise.resolve(null);
+      if (index > pdf.numPages) return Promise.resolve(null);
+      var n = index;
+      index += 1;
+      return pdf.getPage(n).then(function (page) {
+        return Promise.all([page.getTextContent(), Promise.resolve(page.getViewport({ scale: 1 }).height)]);
+      }).then(function (res) {
+        var content = res[0];
+        var height = res[1] || 792;
+        var text = '';
+        var baseline = null;
+        content.items.forEach(function (item) {
+          text += (item.str || '') + ' ';
+          if (baseline === null && needle && typeof item.str === 'string' && item.str.indexOf(needle) >= 0) {
+            if (item.transform && typeof item.transform[5] === 'number') baseline = item.transform[5];
+          }
+        });
+        if (!matcher.test(text) || looksLikeIndexPage(text)) return step();
+        var fraction = 0;
+        if (baseline !== null) fraction = Math.max(0, Math.min(0.9, 1 - (baseline / height)));
+        return { page: n, fraction: fraction };
+      });
+    }
+    return step();
+  }
+
+  function docHref(docId, target) {
+    return '#/doc/' + docId + (target ? '/' + encodeURIComponent(target) : '');
+  }
+
+  function docRow(docId) {
+    var doc = DOCS[docId];
+    if (!doc) return null;
+    return h('a', { class: 'pick', href: docHref(docId) }, [
+      h('div', { class: 'pick-top' }, [
+        h('span', { class: 'pick-code', text: doc.kind === 'syllabus' ? 'Syllabus' : 'Sample exam' }),
+        h('span', { class: 'badge', text: 'PDF' })
+      ]),
+      h('span', { class: 'pick-name', text: doc.title })
+    ]);
+  }
+
+  function viewDoc(docId, target) {
+    var doc = DOCS[docId];
+    if (!doc) {
+      return goBackTo('Document not found', 'That source document is not part of this app.', '#/practice', 'Back to practice');
+    }
+    navActive('practice');
+    document.title = doc.title + ' - CertStudy';
+    var token = ++docToken;
+
+    var status = h('div', { class: 'pdf-status', text: 'Loading the document…' });
+    var counter = h('span', { class: 'small muted', text: '' });
+    var zoomLabel = h('span', { class: 'small muted', text: '100%' });
+    var viewEl2 = h('div', { class: 'pdf-view' });
+    var zoom = 1;
+    var hooks = { rerender: function () { } };
+
+    function setZoom(delta) {
+      zoom = Math.max(0.6, Math.min(2.4, Math.round((zoom + delta) * 100) / 100));
+      zoomLabel.textContent = Math.round(zoom * 100) + '%';
+      hooks.rerender();
+    }
+
+    var wrap = h('div', { class: 'wrap' }, [
+      h('div', { class: 'head' }, [
+        h('a', { class: 'small', href: '#/practice', text: 'Back to practice' }),
+        h('span', { class: 'eyebrow', text: 'ISTQB source document' }),
+        h('h1', { class: 'h1', text: doc.title }),
+        h('p', { class: 'small muted', text: doc.note })
+      ]),
+      h('div', { class: 'pdf-toolbar' }, [
+        counter,
+        h('div', { class: 'row tight' }, [
+          h('button', { class: 'btn small', attrs: { type: 'button', 'aria-label': 'Zoom out' }, text: '−', on: { click: function () { setZoom(-0.15); } } }),
+          zoomLabel,
+          h('button', { class: 'btn small', attrs: { type: 'button', 'aria-label': 'Zoom in' }, text: '+', on: { click: function () { setZoom(0.15); } } }),
+          h('a', { class: 'btn small ghost', href: doc.file, attrs: { target: '_blank', rel: 'noopener' }, text: 'Open PDF' })
+        ])
+      ]),
+      status,
+      viewEl2,
+      h('p', { class: 'tiny muted', text: 'Rendered from the official ISTQB PDF. Scrolling loads pages as you need them.' }),
+      footerNote()
+    ]);
+
+    window.setTimeout(function () {
+      if (token !== docToken) return;
+      loadPdfJs().then(function (lib) {
+        return lib.getDocument({ url: doc.file, isEvalSupported: false, enableXfa: false }).promise;
+      }).then(function (pdf) {
+        if (token !== docToken) return;
+        status.textContent = '';
+        counter.textContent = pdf.numPages + ' pages';
+        hooks = buildDocPages(pdf, viewEl2, doc, target, token, function () { return zoom; });
+      }).catch(function (err) {
+        if (token !== docToken) return;
+        status.textContent = 'This document could not be displayed in the app: ' + ((err && err.message) || err) + ' ';
+        status.appendChild(h('a', { href: doc.file, attrs: { target: '_blank', rel: 'noopener' }, text: 'Open the PDF directly' }));
+      });
+    }, 0);
+
+    return wrap;
+  }
+
+  function buildDocPages(pdf, host, doc, target, token, getZoom) {
+    var boxes = [];
+    var hooks = { rerender: function () { } };
+
+    function renderBox(box) {
+      if (box.__rendered || box.__busy) return;
+      box.__busy = true;
+      var n = box.__pageNumber;
+      pdf.getPage(n).then(function (page) {
+        if (token !== docToken) return null;
+        var base = page.getViewport({ scale: 1 });
+        var width = host.clientWidth || 360;
+        var scale = (width / base.width) * getZoom();
+        var vp = page.getViewport({ scale: scale });
+        var canvas = box.__canvas;
+        canvas.width = Math.max(1, Math.floor(vp.width));
+        canvas.height = Math.max(1, Math.floor(vp.height));
+        var ctx = canvas.getContext('2d', { alpha: false });
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        return page.render({ canvasContext: ctx, viewport: vp }).promise;
+      }).then(function () {
+        box.__rendered = true;
+        box.__busy = false;
+      }).catch(function () {
+        box.__busy = false;
+      });
+    }
+
+    function releaseBox(box) {
+      if (!box.__rendered) return;
+      box.__canvas.width = 0;
+      box.__canvas.height = 0;
+      box.__rendered = false;
+    }
+
+    function nearView(box) {
+      var rect = box.getBoundingClientRect();
+      return rect.bottom > -700 && rect.top < (window.innerHeight + 700);
+    }
+
+    function rerenderNear() {
+      boxes.forEach(function (box) {
+        if (nearView(box)) {
+          releaseBox(box);
+          renderBox(box);
+        }
+      });
+    }
+    hooks.rerender = rerenderNear;
+
+    pdf.getPage(1).then(function (page) {
+      if (token !== docToken) return null;
+      var vp = page.getViewport({ scale: 1 });
+      var ratio = vp.width + ' / ' + vp.height;
+      for (var i = 1; i <= pdf.numPages; i++) {
+        var box = h('div', { class: 'pdf-page', attrs: { 'data-page': String(i), 'aria-label': 'Page ' + i } });
+        try { box.style.aspectRatio = ratio; } catch (e) { /* older engine */ }
+        box.style.minHeight = '240px';
+        var canvas = h('canvas');
+        box.appendChild(canvas);
+        box.__canvas = canvas;
+        box.__pageNumber = i;
+        box.__rendered = false;
+        box.__busy = false;
+        boxes.push(box);
+        host.appendChild(box);
+      }
+
+      if ('IntersectionObserver' in window) {
+        var io = new window.IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (token !== docToken) return;
+            if (entry.isIntersecting) renderBox(entry.target);
+            else releaseBox(entry.target);
+          });
+        }, { rootMargin: '700px 0px' });
+        boxes.forEach(function (box) { io.observe(box); });
+        docObserver = io;
+      } else {
+        boxes.forEach(renderBox);
+      }
+
+      if (!target) return null;
+      var matcher;
+      var needle;
+      if (doc.kind === 'questions') {
+        matcher = new RegExp('Question\\s*#\\s*' + escapeRe(target) + '\\b');
+        needle = '#' + target;
+      } else {
+        needle = String(target).replace(/^FL-/, '');
+        matcher = new RegExp('\\b' + escapeRe(needle) + '\\b');
+      }
+      return findPage(pdf, matcher, token, needle).then(function (found) {
+        if (!found || !found.page || token !== docToken) return;
+        var hit = boxes[found.page - 1];
+        if (!hit) return;
+        hit.classList.add('hit');
+        renderBox(hit);
+        window.setTimeout(function () {
+          if (token !== docToken) return;
+          try { hit.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { }
+          var fraction = found.fraction || 0;
+          if (fraction > 0.02) {
+            window.setTimeout(function () {
+              if (token !== docToken) return;
+              var extra = Math.round(hit.offsetHeight * fraction) - 88;
+              if (extra > 0) window.scrollBy({ top: extra, behavior: 'smooth' });
+            }, 400);
+          }
+        }, 150);
+      });
+    });
+
+    return hooks;
   }
 
   function referenceNode(ref) {
-    var data = setCached(ref.sid);
-    var setLabel = data ? data.label : 'Set ' + ref.sid.toUpperCase();
-    var version = data && data.version ? ' v' + data.version : '';
-    var answersUrl = data && data.answersUrl ? data.answersUrl : '';
-    var syllabusUrl = syllabusPdfUrl();
-    var out = h('div', { class: 'ref' }, [h('span', { text: 'Reference: ' })]);
-    if (answersUrl) {
-      out.appendChild(h('a', {
-        href: answersUrl,
-        attrs: { target: '_blank', rel: 'noopener noreferrer' },
-        text: 'ISTQB ' + setLabel + ' answers' + version
-      }));
-    } else {
-      out.appendChild(h('span', { text: 'ISTQB ' + setLabel }));
-    }
+    var sid = ref.sid;
+    var data = setCached(sid);
+    var setLabel = data && data.label ? data.label.replace('Sample Exam Set ', '') : sid.toUpperCase();
+    var n = String(ref.q.n);
+    var lo = ref.q.lo || '';
+    var loNum = lo.replace(/^FL-/, '');
+    var out = h('div', { class: 'ref' }, [h('span', { text: 'Source: ' })]);
+    out.appendChild(h('a', {
+      href: docHref(sid + '-questions', n),
+      text: 'Exam ' + setLabel + ' questions, Q' + n
+    }));
     out.appendChild(h('span', { text: ' · ' }));
-    if (syllabusUrl) {
+    out.appendChild(h('a', {
+      href: docHref(sid + '-answers'),
+      text: 'Answers'
+    }));
+    if (lo) {
+      out.appendChild(h('span', { text: ' · ' }));
       out.appendChild(h('a', {
-        href: syllabusUrl,
-        attrs: { target: '_blank', rel: 'noopener noreferrer' },
-        text: 'Syllabus ' + ref.q.lo
+        href: docHref('syllabus', loNum),
+        text: 'Syllabus ' + lo
       }));
-    } else {
-      out.appendChild(h('span', { text: 'Syllabus ' + ref.q.lo }));
     }
     out.appendChild(h('span', { text: ' · ' + ref.q.k + ' · ' + chapterName(ref.q.lo) }));
     return out;
@@ -1342,6 +1623,7 @@
 
   function render() {
     stopTimer();
+    docsCleanup();
     if (!catalog) return Promise.resolve();
 
     var p = parts();
@@ -1368,6 +1650,8 @@
       work = ensureAllSets().then(viewStats);
     } else if (p[0] === 'settings') {
       work = Promise.resolve(viewSettings());
+    } else if (p[0] === 'doc') {
+      work = Promise.resolve(viewDoc(p[1], p[2]));
     } else if (p[0] === 'cert') {
       work = ensureAllSets().then(function () { return viewCert(p[1]); });
     } else if (p[0] === 'exams') {

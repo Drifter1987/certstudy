@@ -55,7 +55,23 @@ Question schema (compact keys to keep the files small):
 ```
 
 Each set file also carries `answersUrl` and `questionsUrl` (the official istqb.org download for
-that sample exam) so every revealed answer can link back to its source.
+that sample exam) for provenance. The PDFs themselves are mirrored into `docs/ctfl/` so they can be
+read inside the app.
+
+## Source documents (in-app PDF reader)
+
+The nine official ISTQB PDFs are stored in `docs/ctfl/` and rendered page by page with a vendored
+build of Mozilla's pdf.js (`assets/vendor/pdfjs/`, version 3.11.174, legacy build). They open at
+`#/doc/<docId>`, scroll like a document, zoom with `+` / `-`, and load/release page canvases as you
+scroll so memory stays low on phones.
+
+Doc ids: `a-questions`, `a-answers` … `d-questions`, `d-answers`, plus `syllabus`.
+
+Every revealed answer links to `#/doc/a-questions/12` (the question is scrolled to and outlined in
+gold, table-of-contents pages are skipped), to the set's answers PDF, and to the syllabus section
+for its learning objective.
+
+`docs/` (about 3.7 MB) is static content served as-is; nothing is sent to any other service.
 
 Sources: the CTFL v4.0 downloads on
 [istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0](https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/).

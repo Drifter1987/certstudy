@@ -668,10 +668,10 @@
 
     wrap.appendChild(h('div', { class: 'card tight' }, [
       h('div', { class: 'row tight' }, [
-        h('span', { class: 'small muted', text: 'Correct so far' }),
-        h('span', { class: 'small', text: countCheckedCorrect() + ' of ' + countChecked() + ' checked' })
+        h('span', { class: 'small muted', text: 'Answers revealed' }),
+        h('span', { class: 'small', text: countCheckedCorrect() + ' correct of ' + countChecked() + ' shown' })
       ]),
-      h('p', { class: 'tiny muted', text: 'Keyboard: press 1 to 5 to choose an option, Enter to check the answer and move on.' })
+      h('p', { class: 'tiny muted', text: 'Choosing an option never reveals the answer. Use Show answer when you are ready. Keyboard: 1 to 5 to choose, Enter to show the answer, Enter again for the next question.' })
     ]));
     return wrap;
   }
@@ -702,52 +702,92 @@
     return list;
   }
 
+  function syllabusPdfUrl() {
+    var c = certById('ctfl');
+    return c && c.syllabusPdf ? c.syllabusPdf : '';
+  }
+
+  function referenceNode(ref) {
+    var data = setCached(ref.sid);
+    var setLabel = data ? data.label : 'Set ' + ref.sid.toUpperCase();
+    var version = data && data.version ? ' v' + data.version : '';
+    var answersUrl = data && data.answersUrl ? data.answersUrl : '';
+    var syllabusUrl = syllabusPdfUrl();
+    var out = h('div', { class: 'ref' }, [h('span', { text: 'Reference: ' })]);
+    if (answersUrl) {
+      out.appendChild(h('a', {
+        href: answersUrl,
+        attrs: { target: '_blank', rel: 'noopener noreferrer' },
+        text: 'ISTQB ' + setLabel + ' answers' + version
+      }));
+    } else {
+      out.appendChild(h('span', { text: 'ISTQB ' + setLabel }));
+    }
+    out.appendChild(h('span', { text: ' · ' }));
+    if (syllabusUrl) {
+      out.appendChild(h('a', {
+        href: syllabusUrl,
+        attrs: { target: '_blank', rel: 'noopener noreferrer' },
+        text: 'Syllabus ' + ref.q.lo
+      }));
+    } else {
+      out.appendChild(h('span', { text: 'Syllabus ' + ref.q.lo }));
+    }
+    out.appendChild(h('span', { text: ' · ' + ref.q.k + ' · ' + chapterName(ref.q.lo) }));
+    return out;
+  }
+
   function feedbackBlock(ref, chosen, checked) {
     if (!checked) return null;
     var ok = isCorrect(ref, chosen);
-    var correctText = ref.q.a.map(function (l) { return l; }).join(', ');
+    var joined = ref.q.a.join(', ');
+    var verdict = ok ? 'Correct' : (chosen.length ? 'Not quite - the answer is ' + joined : 'The answer is ' + joined);
     return h('div', { class: 'feedback ' + (ok ? 'ok' : 'no'), attrs: { role: 'status' } }, [
-      h('div', { class: 'verdict', text: ok ? 'Correct' : 'Not quite - the answer is ' + correctText }),
+      h('div', { class: 'verdict', text: verdict }),
       h('div', { class: 'exp', text: ref.q.e }),
-      h('div', { class: 'ref', text: 'Learning objective ' + ref.q.lo + ' · ' + ref.q.k + ' · ' + chapterName(ref.q.lo) })
+      referenceNode(ref)
     ]);
   }
 
+  function revealAnswer(ref) {
+    if (!session || session.kind !== 'practice') return;
+    if (session.checked[ref.key]) return;
+    session.checked[ref.key] = true;
+    var chosen = session.answers[ref.key] || [];
+    if (chosen.length) record(ref, chosen, isCorrect(ref, chosen));
+    render();
+  }
+
   function actionsBlock(ref, chosen, checked, i, total) {
-    var row = h('div', { class: 'navq' });
-    row.appendChild(h('button', {
-      class: 'btn small ghost', attrs: { type: 'button' }, text: 'Previous',
-      on: { click: function () { if (i > 0) { session.index = i - 1; render(); } } }
-    }));
-    var right = h('div', { class: 'row tight' });
-    if (!checked) {
-      right.appendChild(h('button', {
-        class: 'btn primary', attrs: { type: 'button' },
-        text: 'Check answer',
-        on: {
-          click: function () {
-            if (!(session.answers[ref.key] || []).length) { toast('Choose an option first'); return; }
-            var ok = isCorrect(ref, session.answers[ref.key]);
-            session.checked[ref.key] = true;
-            record(ref, session.answers[ref.key], ok);
-            render();
+    return h('div', { class: 'navq' }, [
+      h('button', {
+        class: 'btn small ghost',
+        attrs: { type: 'button', disabled: i === 0 ? 'disabled' : null },
+        text: 'Previous',
+        on: { click: function () { if (i > 0) { session.index = i - 1; render(); } } }
+      }),
+      h('div', { class: 'row tight' }, [
+        checked
+          ? h('span', { class: 'badge ready', text: 'Answer shown' })
+          : h('button', {
+            class: 'btn small',
+            attrs: { type: 'button' },
+            text: 'Show answer',
+            on: { click: function () { revealAnswer(ref); } }
+          }),
+        h('button', {
+          class: 'btn small primary',
+          attrs: { type: 'button' },
+          text: i === total - 1 ? 'Finish session' : 'Next',
+          on: {
+            click: function () {
+              if (i === total - 1) go('#/practice/done');
+              else { session.index = i + 1; render(); }
+            }
           }
-        }
-      }));
-    } else {
-      right.appendChild(h('button', {
-        class: 'btn primary', attrs: { type: 'button' },
-        text: i === total - 1 ? 'Finish session' : 'Next question',
-        on: {
-          click: function () {
-            if (i === total - 1) go('#/practice/done');
-            else { session.index = i + 1; render(); }
-          }
-        }
-      }));
-    }
-    row.appendChild(right);
-    return row;
+        })
+      ])
+    ]);
   }
 
   function countChecked() {
@@ -1149,6 +1189,7 @@
           h('span', { text: ' · ' + chapterName(r.q.lo) + ' · ' + r.q.lo })
         ]),
         h('div', { class: 'small', text: r.q.e }),
+        referenceNode(r),
         h('div', { class: 'row tight' }, [
           h('button', {
             class: 'btn small ghost', attrs: { type: 'button' },
@@ -1420,11 +1461,9 @@
       if (!current) return;
       ev.preventDefault();
       if (inPractice && !session.checked[current.key]) {
-        if (!(session.answers[current.key] || []).length) { toast('Choose an option first'); return; }
-        var ok = isCorrect(current, session.answers[current.key]);
-        session.checked[current.key] = true;
-        record(current, session.answers[current.key], ok);
-        render();
+        ev.preventDefault();
+        revealAnswer(current);
+        return;
       } else if (inPractice && session.index < session.refs.length - 1) {
         session.index += 1;
         render();

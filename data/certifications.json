@@ -25,6 +25,7 @@
       "prerequisites": "None. CTFL is itself the prerequisite for every other ISTQB Certified Tester certification that requires Foundation Level.",
       "exam": { "questions": 40, "points": 40, "passMark": 26, "minutes": 60, "extraTime": "An extra 25% of the exam time is available when the exam language is not your first language." },
       "syllabusUrl": "https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/",
+      "syllabusPdf": "https://istqb.org/?sdm_process_download=1&download_id=3345",
       "bank": { "sets": ["a", "b", "c", "d"], "total": 186 }
     },
     {

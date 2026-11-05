@@ -362,6 +362,12 @@ label.row { cursor: pointer; justify-content: flex-start; }
 .feedback .verdict { font-weight: 650; margin-bottom: 6px; }
 .feedback .exp { color: var(--text); }
 .feedback .ref { margin-top: 10px; font-size: 11.5px; letter-spacing: 0.05em; color: var(--muted); }
+.feedback .ref a, .revitem .ref a {
+  color: var(--mint);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.revitem .ref { margin: 6px 0 8px; font-size: 11.5px; letter-spacing: 0.04em; color: var(--muted); }
 
 .progress { height: 6px; border-radius: 999px; background: var(--line-2); overflow: hidden; }
 .progress > i { display: block; width: 0; height: 100%; background: var(--mint); border-radius: 999px; transition: width 0.3s ease; }

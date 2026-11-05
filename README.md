@@ -10,8 +10,10 @@ There is no build step, no framework and no backend.
 
 - **186 questions** from the four CTFL v4.0 sample exams published on istqb.org:
   set A (40 exam questions + 26 additional), set B, C and D (40 each).
-- Practice mode: choose a set, shuffle, filter to questions you have not answered correctly,
-  check an answer to see the official answer plus a short explanation and the learning objective.
+- Practice mode: choose a set, shuffle, filter to questions you have not answered correctly.
+  A session shows Previous, Show answer and Next. Choosing an option never reveals the answer;
+  Show answer opens the official answer, the explanation and a small reference linking the ISTQB
+  sample exam answers document and the syllabus learning objective.
 - Mock exam: a 40-question paper (one ISTQB set, or 40 random questions), 60-minute timer,
   answers hidden until submission, pass mark 26/40, per-chapter result breakdown, resume after a reload.
 - Review: bookmarks and every question you answered incorrectly.
@@ -51,6 +53,9 @@ Question schema (compact keys to keep the files small):
   "e": "Explanation of why the answer is right and the others are wrong, summarised from the ISTQB justification"
 }
 ```
+
+Each set file also carries `answersUrl` and `questionsUrl` (the official istqb.org download for
+that sample exam) so every revealed answer can link back to its source.
 
 Sources: the CTFL v4.0 downloads on
 [istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0](https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/).

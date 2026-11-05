@@ -4,6 +4,8 @@
   "version": "1.6",
   "syllabus": "4.0.1",
   "source": "ISTQB CTFL v4.0 Sample Exam C, Questions v1.6 / Answers v1.6 (istqb.org)",
+  "answersUrl": "https://istqb.org/?sdm_process_download=1&download_id=3372",
+  "questionsUrl": "https://istqb.org/?sdm_process_download=1&download_id=3369",
   "questions": [
     {"n": 1, "s": "exam", "p": 1, "lo": "FL-1.1.1", "k": "K1", "a": ["b"], "q": "Which of the following is a typical test objective?", "o": [["a", "Validating that documented requirements are met"], ["b", "Causing failures and identifying defects"], ["c", "Initiating errors and identifying root causes"], ["d", "Verifying the test object meets user expectations"]], "e": "Causing failures and identifying defects is the most common objective of dynamic testing. Checking documented requirements is verification, identifying root causes belongs to debugging, and judging whether the object meets user expectations is validation, not verification."},
     {"n": 2, "s": "exam", "p": 1, "lo": "FL-1.1.2", "k": "K2", "a": ["c"], "q": "Which of the following statements BEST describes the difference between testing and debugging?", "o": [["a", "Testing causes failures while debugging fixes failures"], ["b", "Testing is a negative activity while debugging is a positive activity"], ["c", "Testing determines that defects exist while debugging removes defects"], ["d", "Testing finds the cause of defects while debugging fixes the cause of defects"]], "e": "Testing shows that defects exist, directly in reviews or indirectly through failures, while debugging is the separate activity that locates and fixes defects. Debugging does not fix failures or the human errors behind defects."},

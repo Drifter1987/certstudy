@@ -224,6 +224,10 @@
     return notes().filter(function (n) { return n.id === id; })[0] || null;
   }
 
+  function plural(n, word) {
+    return n + ' ' + word + (n === 1 ? '' : 's');
+  }
+
   function snippet(text) {
     var clean = String(text || '').replace(/\s+/g, ' ').trim();
     return clean.length > 140 ? clean.slice(0, 140) + '…' : clean;
@@ -301,7 +305,7 @@
     return CS.h('div', { class: 'deckrow' }, [
       CS.h('div', { class: 'stack' }, [
         CS.h('strong', { text: deck.name }),
-        CS.h('span', { class: 'small muted', text: st.total + ' cards · ' + st.due + ' due' })
+        CS.h('span', { class: 'small muted', text: plural(st.total, 'card') + ' · ' + st.due + ' due' })
       ]),
       CS.h('div', { class: 'row tight' }, [
         CS.h('button', {
@@ -326,7 +330,7 @@
       CS.h('div', { class: 'head' }, [
         CS.h('a', { class: 'small', href: '#/cards', text: 'Back to flashcards' }),
         CS.h('h1', { class: 'h1', text: deck.name }),
-        CS.h('p', { class: 'small muted', text: list.length + ' cards in this deck.' })
+        CS.h('p', { class: 'small muted', text: plural(list.length, 'card') + ' in this deck.' })
       ]),
       CS.h('div', { class: 'row tight' }, [
         CS.h('button', {

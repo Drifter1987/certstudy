@@ -115,9 +115,13 @@
 
   var views = {};
 
+  var activeDialog = null;
+
   function confirmDialog(opts) {
     opts = opts || {};
+    if (activeDialog) return Promise.resolve(false);
     return new Promise(function (resolve) {
+      activeDialog = true;
       var okBtn = h('button', {
         class: 'btn ' + (opts.danger === false ? 'primary' : 'danger'),
         attrs: { type: 'button' },
@@ -134,11 +138,23 @@
       function close(result) {
         document.removeEventListener('keydown', onKey);
         if (modal.parentNode) modal.parentNode.removeChild(modal);
+        activeDialog = null;
         resolve(result);
       }
       function onKey(ev) { if (ev.key === 'Escape') close(false); }
-      okBtn.addEventListener('click', function () { close(true); });
-      cancelBtn.addEventListener('click', function () { close(false); });
+      okBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        close(true);
+      });
+      cancelBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        close(false);
+      });
+      modal.addEventListener('click', function (ev) {
+        if (ev.target === modal) close(false);
+      });
       document.addEventListener('keydown', onKey);
       document.body.appendChild(modal);
       window.setTimeout(function () { try { okBtn.focus(); } catch (e) { } }, 20);
@@ -943,12 +959,23 @@
     var counter = h('span', { class: 'small muted', text: '' });
     var zoomLabel = h('span', { class: 'small muted', text: '100%' });
     var viewEl2 = h('div', { class: 'pdf-view' });
+    var textHost = h('div', { class: 'pdf-text' });
+    textHost.style.display = 'none';
     var zoom = 1;
+    var textMode = false;
+    var pdfDoc = null;
     var hooks = { rerender: function () { } };
 
     function setZoom(delta) {
-      zoom = Math.max(0.6, Math.min(2.4, Math.round((zoom + delta) * 100) / 100));
+      var next = Math.round((zoom + delta) * 100) / 100;
+      zoom = Math.max(0.8, Math.min(3.2, next));
       zoomLabel.textContent = Math.round(zoom * 100) + '%';
+      hooks.rerender();
+    }
+
+    function fitZoom() {
+      zoom = 1;
+      zoomLabel.textContent = '100%';
       hooks.rerender();
     }
 
@@ -962,15 +989,33 @@
       h('div', { class: 'pdf-toolbar' }, [
         counter,
         h('div', { class: 'row tight' }, [
-          h('button', { class: 'btn small', attrs: { type: 'button', 'aria-label': 'Zoom out' }, text: '−', on: { click: function () { setZoom(-0.15); } } }),
+          h('button', { class: 'btn small', attrs: { type: 'button', 'aria-label': 'Zoom out' }, text: '−', on: { click: function () { setZoom(-0.2); } } }),
           zoomLabel,
-          h('button', { class: 'btn small', attrs: { type: 'button', 'aria-label': 'Zoom in' }, text: '+', on: { click: function () { setZoom(0.15); } } }),
+          h('button', { class: 'btn small', attrs: { type: 'button', 'aria-label': 'Zoom in' }, text: '+', on: { click: function () { setZoom(0.2); } } }),
+          h('button', { class: 'btn small ghost', attrs: { type: 'button' }, text: 'Fit', on: { click: fitZoom } }),
+          h('button', {
+            class: 'btn small ghost', attrs: { type: 'button' }, text: 'Text view',
+            on: {
+              click: function (ev) {
+                if (!pdfDoc) { toast('Wait for the document'); return; }
+                textMode = !textMode;
+                ev.currentTarget.textContent = textMode ? 'Page view' : 'Text view';
+                viewEl2.style.display = textMode ? 'none' : '';
+                textHost.style.display = textMode ? '' : 'none';
+                if (textMode && !textHost.__built) {
+                  textHost.__built = true;
+                  buildTextView(pdfDoc, textHost, doc, target, token, status);
+                }
+              }
+            }
+          }),
           h('a', { class: 'btn small ghost', href: doc.file, attrs: { target: '_blank', rel: 'noopener' }, text: 'Open PDF' })
         ])
       ]),
       status,
       viewEl2,
-      h('p', { class: 'tiny muted', text: 'Rendered from the official ISTQB PDF. Scrolling loads pages as you need them.' }),
+      textHost,
+      h('p', { class: 'tiny muted', text: 'Rendered at full screen resolution from the official ISTQB PDF. Zoom past 100% and drag sideways to read small print.' }),
       footerNote()
     ]);
 
@@ -982,6 +1027,7 @@
         if (token !== docToken) return;
         status.textContent = '';
         counter.textContent = pdf.numPages + ' pages';
+        pdfDoc = pdf;
         hooks = buildDocPages(pdf, viewEl2, doc, target, token, function () { return zoom; });
       }).catch(function (err) {
         if (token !== docToken) return;
@@ -991,6 +1037,66 @@
     }, 0);
 
     return wrap;
+  }
+
+  function textLines(content) {
+    var lines = [];
+    var current = null;
+    (content.items || []).forEach(function (item) {
+      if (!item.str) return;
+      var y = item.transform ? Math.round(item.transform[5]) : 0;
+      if (!current || Math.abs(current.y - y) > 3) {
+        current = { y: y, parts: [item.str] };
+        lines.push(current);
+      } else {
+        current.parts.push(item.str);
+      }
+    });
+    return lines
+      .map(function (line) { return line.parts.join(' ').replace(/\s+/g, ' ').trim(); })
+      .filter(function (line) { return line.length > 0; });
+  }
+
+  function buildTextView(pdf, host, doc, target, token, status) {
+    var matcher = null;
+    if (target) {
+      if (doc.kind === 'questions') matcher = new RegExp('Question\\s*#\\s*' + escapeRe(target) + '\\b');
+      else matcher = new RegExp('\\b' + escapeRe(String(target).replace(/^FL-/, '')) + '\\b');
+    }
+    status.textContent = 'Extracting the text of ' + pdf.numPages + ' pages…';
+    var pageNo = 1;
+
+    function next() {
+      if (token !== docToken) return;
+      if (pageNo > pdf.numPages) { status.textContent = ''; return; }
+      var thisPage = pageNo;
+      pageNo += 1;
+      pdf.getPage(thisPage).then(function (page) {
+        return page.getTextContent();
+      }).then(function (content) {
+        if (token !== docToken) return;
+        var lines = textLines(content);
+        var section = h('section', { class: 'pdf-textpage', attrs: { 'data-page': String(thisPage) } }, [
+          h('div', { class: 'pdf-texthead', text: 'Page ' + thisPage + ' of ' + pdf.numPages })
+        ]);
+        lines.forEach(function (line) {
+          section.appendChild(h('p', { class: 'pdf-line', text: line }));
+        });
+        host.appendChild(section);
+        if (matcher && !host.__hit && matcher.test(lines.join(' '))) {
+          host.__hit = true;
+          section.classList.add('hit');
+          window.setTimeout(function () {
+            try { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { }
+          }, 60);
+        }
+        if (thisPage === pdf.numPages) status.textContent = '';
+        next();
+      }).catch(function () {
+        status.textContent = '';
+      });
+    }
+    next();
   }
 
   function buildDocPages(pdf, host, doc, target, token, getZoom) {
@@ -1004,12 +1110,15 @@
       pdf.getPage(n).then(function (page) {
         if (token !== docToken) return null;
         var base = page.getViewport({ scale: 1 });
-        var width = host.clientWidth || 360;
-        var scale = (width / base.width) * getZoom();
+        var cssWidth = Math.max(240, Math.round((host.clientWidth || 360) * getZoom()));
+        var dpr = Math.min(2.5, Math.max(1, window.devicePixelRatio || 1));
+        var scale = (cssWidth / base.width) * dpr;
         var vp = page.getViewport({ scale: scale });
         var canvas = box.__canvas;
         canvas.width = Math.max(1, Math.floor(vp.width));
         canvas.height = Math.max(1, Math.floor(vp.height));
+        canvas.style.width = cssWidth + 'px';
+        canvas.style.height = 'auto';
         var ctx = canvas.getContext('2d', { alpha: false });
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1040,10 +1149,14 @@
     }
 
     function rerenderNear() {
+      var width = Math.max(240, host.clientWidth || 360);
       boxes.forEach(function (box) {
+        box.style.width = Math.round(width * getZoom()) + 'px';
         if (nearView(box)) {
           releaseBox(box);
           renderBox(box);
+        } else {
+          releaseBox(box);
         }
       });
     }
@@ -1055,6 +1168,7 @@
       var ratio = vp.width + ' / ' + vp.height;
       for (var i = 1; i <= pdf.numPages; i++) {
         var box = h('div', { class: 'pdf-page', attrs: { 'data-page': String(i), 'aria-label': 'Page ' + i } });
+        box.style.width = Math.max(240, host.clientWidth || 360) + 'px';
         try { box.style.aspectRatio = ratio; } catch (e) { /* older engine */ }
         box.style.minHeight = '240px';
         var canvas = h('canvas');
@@ -1705,6 +1819,20 @@
         h('div', { class: 'row tight' }, [
           h('button', { class: 'btn small', attrs: { type: 'button' }, text: 'Export progress', on: { click: exportData } }),
           h('button', {
+            class: 'btn small', attrs: { type: 'button' }, text: 'Import backup',
+            on: {
+              click: function () {
+                var picker = document.createElement('input');
+                picker.type = 'file';
+                picker.accept = 'application/json,.json';
+                picker.addEventListener('change', function () {
+                  importBackup(picker.files && picker.files[0]);
+                });
+                picker.click();
+              }
+            }
+          }),
+          h('button', {
             class: 'btn small danger', attrs: { type: 'button' }, text: 'Reset everything',
             on: {
               click: function () {
@@ -1743,21 +1871,69 @@
     ]);
   }
 
+  function showBackup(json) {
+    var area = h('textarea', { class: 'field', attrs: { rows: '12', readonly: 'readonly' } });
+    area.value = json;
+    var modal = h('div', { class: 'modal' }, [
+      h('div', { class: 'modal-card' }, [
+        h('h2', { class: 'h2', text: 'Your backup' }),
+        h('p', { class: 'small muted', text: 'Copy this text and keep it somewhere safe. It restores progress, flashcards and note text; images stay on this device.' }),
+        area,
+        h('div', { class: 'row tight' }, [
+          h('button', {
+            class: 'btn small primary', attrs: { type: 'button' }, text: 'Copy',
+            on: {
+              click: function () {
+                try { area.select(); document.execCommand('copy'); } catch (e) { }
+                toast('Copied to the clipboard');
+              }
+            }
+          }),
+          h('button', {
+            class: 'btn small ghost', attrs: { type: 'button' }, text: 'Close',
+            on: { click: function () { if (modal.parentNode) modal.parentNode.removeChild(modal); } }
+          })
+        ])
+      ])
+    ]);
+    document.body.appendChild(modal);
+    window.setTimeout(function () { try { area.focus(); area.select(); } catch (e) { } }, 40);
+  }
+
   function exportData() {
-    try {
-      var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'certstudy-progress.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-      toast('Progress exported');
-    } catch (e) {
-      toast('Export is not available in this browser');
+    var json = JSON.stringify(state, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json).then(function () {
+        toast('Backup copied to the clipboard');
+      }).catch(function () { showBackup(json); });
+      return;
     }
+    showBackup(json);
+  }
+
+  function importBackup(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var parsed;
+      try { parsed = JSON.parse(reader.result); } catch (e) { parsed = null; }
+      if (!parsed || typeof parsed !== 'object') { toast('That file is not a backup'); return; }
+      confirmDialog({
+        title: 'Replace data on this device?',
+        message: 'Progress, cards and notes in the backup replace what is here. Images are not part of a backup.',
+        confirmLabel: 'Import'
+      }).then(function (ok) {
+        if (!ok) return;
+        var theme = state.theme;
+        state = Object.assign(defaultState(), parsed);
+        state.theme = theme || 'dark';
+        applyTheme();
+        save();
+        toast('Backup imported');
+        navigate('#/home');
+      });
+    };
+    reader.readAsText(file);
   }
 
   /* ------------------------------------------------------------ dispatch */

@@ -68,8 +68,13 @@ read inside the app.
 
 The nine official ISTQB PDFs are stored in `docs/ctfl/` and rendered page by page with a vendored
 build of Mozilla's pdf.js (`assets/vendor/pdfjs/`, version 3.11.174, legacy build). They open at
-`#/doc/<docId>`, scroll like a document, zoom with `+` / `-`, and load/release page canvases as you
-scroll so memory stays low on phones.
+`#/doc/<docId>`, scroll like a document, zoom with `+` / `-` / `Fit` (80-320%, with sideways pan),
+and load/release page canvases as you scroll so memory stays low on phones. Pages are rasterised at
+the device pixel ratio so text stays sharp.
+
+**Text view** extracts each page's text and lays it out as readable, selectable paragraphs, one card
+per page — the comfortable way to read on a phone. The jump target still gets highlighted in either
+mode.
 
 Doc ids: `a-questions`, `a-answers` … `d-questions`, `d-answers`, plus `syllabus`.
 

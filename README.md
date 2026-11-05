@@ -18,8 +18,14 @@ There is no build step, no framework and no backend.
   answers hidden until submission, pass mark 26/40, per-chapter result breakdown, resume after a reload.
 - Review: bookmarks and every question you answered incorrectly.
 - Stats: answered count, accuracy, per-chapter and per-set progress, mock exam history.
-- Light and dark themes. Everything is stored in `localStorage` on the device: no account,
-  no analytics, no network calls except loading the app's own JSON files.
+- **Flashcards**: your own decks and cards, an image per card (drag and drop, or pick a file),
+  and study sessions on a spaced schedule (again, then 1, 3, 7, 16, 35, 70 days).
+- **Notes**: titled notes with a body, tags, search and any number of images dropped or picked
+  into them; images are resized in the browser and kept in IndexedDB, the text in local storage.
+- **Exams hub**: official sample tests (practice and timed papers) and the official PDF papers
+  together in one section, with the exam rules.
+- Light and dark themes. Everything is stored on the device: no account, no analytics,
+  no network calls except loading the app's own files.
 
 ## Certification selector
 

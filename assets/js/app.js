@@ -69,6 +69,13 @@
     opts = opts || {};
     if (opts.class) e.className = opts.class;
     if (opts.text !== undefined && opts.text !== null) e.textContent = String(opts.text);
+    if (opts.href) e.setAttribute('href', opts.href);
+    if (opts.src) e.setAttribute('src', opts.src);
+    if (opts.type) e.setAttribute('type', opts.type);
+    if (opts.id) e.setAttribute('id', opts.id);
+    if (opts.value !== undefined) e.value = opts.value;
+    if (opts.placeholder) e.setAttribute('placeholder', opts.placeholder);
+    if (opts.target) e.setAttribute('target', opts.target);
     if (opts.attrs) {
       Object.keys(opts.attrs).forEach(function (k) {
         var v = opts.attrs[k];
@@ -95,6 +102,47 @@
     toastEl.classList.add('show');
     window.clearTimeout(toastId);
     toastId = window.setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+  }
+
+  function uid() {
+    return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '';
+    try { return new Date(ts).toLocaleDateString(); } catch (e) { return ''; }
+  }
+
+  var views = {};
+
+  function confirmDialog(opts) {
+    opts = opts || {};
+    return new Promise(function (resolve) {
+      var okBtn = h('button', {
+        class: 'btn ' + (opts.danger === false ? 'primary' : 'danger'),
+        attrs: { type: 'button' },
+        text: opts.confirmLabel || 'Confirm'
+      });
+      var cancelBtn = h('button', { class: 'btn ghost', attrs: { type: 'button' }, text: opts.cancelLabel || 'Cancel' });
+      var modal = h('div', { class: 'modal', attrs: { role: 'dialog', 'aria-modal': 'true' } }, [
+        h('div', { class: 'modal-card' }, [
+          h('h2', { class: 'h2', text: opts.title || 'Are you sure?' }),
+          opts.message ? h('p', { class: 'small muted', text: opts.message }) : null,
+          h('div', { class: 'row tight' }, [cancelBtn, okBtn])
+        ])
+      ]);
+      function close(result) {
+        document.removeEventListener('keydown', onKey);
+        if (modal.parentNode) modal.parentNode.removeChild(modal);
+        resolve(result);
+      }
+      function onKey(ev) { if (ev.key === 'Escape') close(false); }
+      okBtn.addEventListener('click', function () { close(true); });
+      cancelBtn.addEventListener('click', function () { close(false); });
+      document.addEventListener('keydown', onKey);
+      document.body.appendChild(modal);
+      window.setTimeout(function () { try { okBtn.focus(); } catch (e) { } }, 20);
+    });
   }
 
   function fetchJSON(path) {
@@ -251,11 +299,13 @@
     return route().split('/').filter(function (x) { return x.length > 0; });
   }
 
-  function go(path) {
+  function navigate(path) {
     var next = path.charAt(0) === '#' ? path : '#' + path;
-    if ('#' + route() === next) { render(); return; }
-    window.location.hash = next;
+    if (window.location.hash !== next) window.location.hash = next;
+    render(true);
   }
+
+  function go(path) { navigate(path); }
 
   function goBackTo(title, text, hash, label) {
     return h('div', { class: 'wrap' }, [
@@ -464,6 +514,71 @@
   }
 
   function viewExams() {
+    navActive('exams');
+    document.title = 'Exams and sample tests - CertStudy';
+    var sets = bankSetIds();
+    var wrap = h('div', { class: 'wrap' }, [
+      h('div', { class: 'head' }, [
+        h('span', { class: 'eyebrow', text: 'Everything for the CTFL exam' }),
+        h('h1', { class: 'h1', text: 'Exams and sample tests' }),
+        h('p', { class: 'lede', text: 'Official sample tests, the official PDF papers and the exam rules, in one section.' })
+      ])
+    ]);
+
+    var tests = h('section', { class: 'card' }, [
+      h('h2', { class: 'h2', text: 'Official sample tests' }),
+      h('p', { class: 'small muted', text: '186 ISTQB sample questions from the four published sets. Practise with explanations, or sit a set as a timed 40-question paper.' })
+    ]);
+    sets.forEach(function (sid) {
+      var data = setCached(sid);
+      var st = statsFor(refsForSet(sid));
+      tests.appendChild(h('div', { class: 'deckrow' }, [
+        h('div', { class: 'stack' }, [
+          h('strong', { text: data ? data.label : 'Set ' + sid.toUpperCase() }),
+          h('span', { class: 'small muted', text: refsForSet(sid).length + ' questions · ' + examRefsCount(sid) + ' in the timed paper · ' + st.answered + ' answered' })
+        ]),
+        h('div', { class: 'row tight' }, [
+          h('button', { class: 'btn small', attrs: { type: 'button' }, text: 'Practise', on: { click: function () { startPractice(sid); } } }),
+          h('button', { class: 'btn small primary', attrs: { type: 'button' }, text: 'Mock exam', on: { click: function () { startExam(sid); } } })
+        ])
+      ]));
+    });
+    tests.appendChild(h('div', { class: 'row tight' }, [
+      h('button', { class: 'btn small', attrs: { type: 'button' }, text: 'Mixed practice, all sets', on: { click: function () { startPractice('mix'); } } }),
+      h('button', { class: 'btn small', attrs: { type: 'button' }, text: 'Random 40-question paper', on: { click: function () { startExam('mix'); } } })
+    ]));
+    wrap.appendChild(tests);
+
+    wrap.appendChild(h('section', { class: 'card' }, [
+      h('h2', { class: 'h2', text: 'Official exam papers' }),
+      h('p', { class: 'small muted', text: 'The ISTQB PDFs, readable in the app: questions, answers with justifications, and the syllabus.' }),
+      h('div', { class: 'grid grid-2' }, sets.map(function (sid) { return docRow(sid + '-questions'); })),
+      h('div', { class: 'grid grid-2' }, sets.map(function (sid) { return docRow(sid + '-answers'); })),
+      h('div', { class: 'row tight' }, [docRow('syllabus')])
+    ]));
+
+    wrap.appendChild(h('section', { class: 'card' }, [
+      h('h2', { class: 'h2', text: 'Exam rules' }),
+      h('dl', { class: 'kv' }, [
+        h('dt', { text: 'Questions' }), h('dd', { text: '40, one point each' }),
+        h('dt', { text: 'Pass mark' }), h('dd', { text: passMark() + ' of 40' }),
+        h('dt', { text: 'Time' }), h('dd', { text: examMinutes() + ' minutes, plus 25% when the exam language is not your first language' }),
+        h('dt', { text: 'Scoring' }), h('dd', { text: 'No partial credit: a two-option question scores only when both are right' }),
+        h('dt', { text: 'How official is a sample test?' }), h('dd', { text: 'The ISTQB sample exams are practice papers, and ISTQB states they cannot be used as-is in an official examination.' })
+      ])
+    ]));
+
+    wrap.appendChild(h('section', { class: 'card' }, [
+      h('h2', { class: 'h2', text: 'Other certifications' }),
+      h('p', { class: 'small muted', text: 'Every ISTQB certification is listed with its audience, prerequisites and fee guidance.' }),
+      h('a', { class: 'btn small', href: '#/certs', text: 'Browse all certifications' })
+    ]));
+
+    wrap.appendChild(footerNote());
+    return wrap;
+  }
+
+  function viewCerts() {
     navActive('exams');
     document.title = 'Certifications - CertStudy';
     var wrap = h('div', { class: 'wrap' }, [
@@ -909,6 +1024,11 @@
       box.__rendered = false;
     }
 
+    function farAway(box) {
+      var rect = box.getBoundingClientRect();
+      return rect.bottom < -2600 || rect.top > (window.innerHeight + 2600);
+    }
+
     function nearView(box) {
       var rect = box.getBoundingClientRect();
       return rect.bottom > -700 && rect.top < (window.innerHeight + 700);
@@ -947,7 +1067,7 @@
           entries.forEach(function (entry) {
             if (token !== docToken) return;
             if (entry.isIntersecting) renderBox(entry.target);
-            else releaseBox(entry.target);
+            else if (farAway(entry.target)) releaseBox(entry.target);
           });
         }, { rootMargin: '700px 0px' });
         boxes.forEach(function (box) { io.observe(box); });
@@ -1314,8 +1434,13 @@
     if (!session || session.kind !== 'exam') return;
     var unanswered = session.refs.length - answeredCountCountSafe();
     if (unanswered > 0) {
-      var sure = window.confirm('You have ' + unanswered + ' unanswered question(s). Submit anyway?');
-      if (!sure) return;
+      confirmDialog({
+        title: 'Submit with ' + unanswered + ' unanswered?',
+        message: 'Questions left blank score zero.',
+        confirmLabel: 'Submit exam',
+        danger: false
+      }).then(function (ok) { if (ok) submit(); });
+      return;
     }
     submit();
   }
@@ -1578,9 +1703,20 @@
             class: 'btn small danger', attrs: { type: 'button' }, text: 'Reset everything',
             on: {
               click: function () {
-                if (!window.confirm('Delete all progress, bookmarks and exam history on this device?')) return;
-                state = defaultState();
-                applyTheme(); save(); toast('Progress cleared'); go('#/home');
+                confirmDialog({
+                  title: 'Reset all progress?',
+                  message: 'This removes answered questions, bookmarks and exam history on this device. Flashcards and notes are kept.',
+                  confirmLabel: 'Reset'
+                }).then(function (ok) {
+                  if (!ok) return;
+                  state.progress = {};
+                  state.marks = {};
+                  state.sessions = [];
+                  state.active = null;
+                  save();
+                  toast('Progress cleared');
+                  navigate('#/home');
+                });
               }
             }
           })
@@ -1621,7 +1757,15 @@
 
   /* ------------------------------------------------------------ dispatch */
 
-  function render() {
+  var lastRouteRendered = null;
+  var lastRenderAt = 0;
+
+  function render(force) {
+    var current = route();
+    var now = Date.now();
+    if (!force && current === lastRouteRendered && now - lastRenderAt < 150) return Promise.resolve();
+    lastRouteRendered = current;
+    lastRenderAt = now;
     stopTimer();
     docsCleanup();
     if (!catalog) return Promise.resolve();
@@ -1629,7 +1773,9 @@
     var p = parts();
     var work;
 
-    if (p[0] === 'practice') {
+    if (views[p[0]]) {
+      work = Promise.resolve().then(function () { return views[p[0]](p); });
+    } else if (p[0] === 'practice') {
       work = ensureAllSets().then(function () {
         if (p[1] === 'run') return viewPracticeRun();
         if (p[1] === 'done') return viewPracticeDone();
@@ -1654,6 +1800,8 @@
       work = Promise.resolve(viewDoc(p[1], p[2]));
     } else if (p[0] === 'cert') {
       work = ensureAllSets().then(function () { return viewCert(p[1]); });
+    } else if (p[0] === 'certs') {
+      work = ensureAllSets().then(viewCerts);
     } else if (p[0] === 'exams') {
       work = ensureAllSets().then(viewExams);
     } else {
@@ -1703,6 +1851,14 @@
   /* -------------------------------------------------------------- events */
 
   window.addEventListener('hashchange', function () { render(); });
+
+  document.addEventListener('click', function (ev) {
+    var link = ev.target && ev.target.closest ? ev.target.closest('a[href^="#/"], [data-go]') : null;
+    if (!link) return;
+    ev.preventDefault();
+    var target = link.getAttribute('data-go') || link.getAttribute('href');
+    if (target) navigate(target);
+  });
 
   if (themeBtn) {
     themeBtn.addEventListener('click', function () {
@@ -1759,8 +1915,29 @@
     }
   });
 
+  window.CS = {
+    h: h,
+    clear: clear,
+    toast: toast,
+    uid: uid,
+    fmtDate: fmtDate,
+    pct: pct,
+    state: function () { return state; },
+    save: save,
+    catalog: function () { return catalog; },
+    views: views,
+    navigate: navigate,
+    render: function () { render(true); },
+    route: route,
+    parts: parts,
+    nav: navActive,
+    confirmDialog: confirmDialog,
+    chapterOf: chapterOf,
+    chapterName: chapterName
+  };
+
   /* ---------------------------------------------------------------- boot */
 
   document.addEventListener('DOMContentLoaded', boot);
-  if (document.readyState === 'interactive' || document.readyState === 'complete') boot();
+  if (document.readyState === 'complete') boot();
 })();

@@ -524,3 +524,123 @@ footer.foot {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+
+/* ---------- interaction polish ---------- */
+
+a, button, .opt, .pick, .qdot, .dock a, label.row, .icon-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.revitem, .cardrow, .noterow, .deckrow { content-visibility: auto; contain-intrinsic-size: 80px; }
+
+/* ---------- modal ---------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 12, 9, 0.62);
+  backdrop-filter: blur(6px);
+}
+.modal-card {
+  width: min(420px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- forms ---------- */
+
+.field,
+.lbl input,
+.lbl textarea,
+.lbl select {
+  width: 100%;
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  min-height: 44px;
+}
+.field:focus, .lbl input:focus, .lbl textarea:focus, .lbl select:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+textarea.field, .lbl textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+.note-body { min-height: 220px; }
+.lbl { display: flex; flex-direction: column; gap: 6px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- drop zone and images ---------- */
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: 20px 14px;
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.drop:hover { border-color: var(--mint-dim); }
+.drop.over { border-color: var(--mint); background: color-mix(in srgb, var(--mint) 10%, var(--panel-2)); }
+.drop strong { font-size: 13.5px; font-weight: 600; }
+
+.thumbs { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.thumbs .drop { flex: 1 1 220px; }
+.thumb-wrap { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.thumb { width: 108px; height: 108px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); }
+.shot { width: 100%; max-height: 320px; object-fit: contain; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); }
+
+/* ---------- cards and notes lists ---------- */
+
+.deckrow,
+.cardrow,
+.noterow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line-2);
+  color: var(--text);
+}
+.deckrow:first-child, .cardrow:first-child, .noterow:first-child { border-top: 0; padding-top: 0; }
+.noterow:hover { text-decoration: none; }
+.cardrow img.thumb { flex: none; }
+.cardrow .stack, .noterow .stack, .deckrow .stack { min-width: 0; }
+.cardrow strong, .noterow strong, .deckrow strong { display: block; }
+.noterow .stack { flex: 1; }
+.noterow strong { font-weight: 600; }
+
+.flash-front { font-size: 22px; line-height: 1.35; margin: 6px 0 2px; }
+.flash-back {
+  font-size: 16px;
+  line-height: 1.55;
+  white-space: pre-line;
+  border-left: 3px solid var(--mint);
+  padding-left: 12px;
+  margin: 4px 0 0;
+}
+
+@media (max-width: 640px) {
+  .cardrow, .noterow, .deckrow { flex-wrap: wrap; }
+  .thumb { width: 84px; height: 84px; }
+}

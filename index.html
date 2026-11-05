@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CertStudy - ISTQB CTFL practice</title>
-<meta name="description" content="Practise the ISTQB Certified Tester Foundation Level sample exam questions online: instant explanations, timed 40-question mock exams, bookmarks and progress tracking.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Study for the ISTQB Certified Tester Foundation Level exam: official sample questions with explanations, timed mock exams, the official PDFs, flashcards and notes.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#07100D">
 <link rel="stylesheet" href="assets/css/app.css">
@@ -28,9 +28,12 @@
     </a>
     <div class="bar-right">
       <span class="chip" id="certChip">CTFL v4.0</span>
-      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch colour theme">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
-      </button>
+      <a class="icon-btn" href="#/review" aria-label="Review bookmarks and mistakes" title="Review">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v16l-5-4-5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
+      </a>
+      <a class="icon-btn" href="#/settings" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 3.5v2M12 18.5v2M4.6 7.5l1.7 1M17.7 15.5l1.7 1M4.6 16.5l1.7-1M17.7 8.5l1.7-1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+      </a>
     </div>
   </div>
 </header>
@@ -52,17 +55,18 @@
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>
     <span>Practice</span>
   </a>
-  <a href="#/review" data-nav="review">
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v16l-5-4-5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
-    <span>Review</span>
+  <a href="#/cards" data-nav="cards">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="7" width="13" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"></rect><path d="M8 4.5h9.5A2.5 2.5 0 0 1 20 7v8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
+    <span>Cards</span>
   </a>
-  <a href="#/stats" data-nav="stats">
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19V9M12 19V5M19 19v-7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>
-    <span>Stats</span>
+  <a href="#/notes" data-nav="notes">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4h9l5 5v11H5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path><path d="M14 4v5h5M8 13h8M8 16.5h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+    <span>Notes</span>
   </a>
 </nav>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="assets/js/app.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
 </body>
 </html>
